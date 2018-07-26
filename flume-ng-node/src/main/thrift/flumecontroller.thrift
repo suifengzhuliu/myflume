@@ -1,5 +1,3 @@
-package org.apache.flume.node;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,8 +16,17 @@ package org.apache.flume.node;
  * specific language governing permissions and limitations
  * under the License.
  */
-public class App {
-	public static void main(String[] args) {
 
-	}
+namespace java org.apache.flume.service
+
+enum Status {
+  OK,
+  FAILED
 }
+
+
+service   FlumeControllerService {
+  Status startFlumeAgent(1:string name 2:string prop)
+  Status stopFlumeAgent(1:string name)
+}
+
