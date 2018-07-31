@@ -23,6 +23,8 @@
 # constants
 ################################
 
+
+FLUME_CLASS="org.apache.flume.service.App"
 FLUME_AGENT_CLASS="org.apache.flume.node.Application"
 FLUME_AVRO_CLIENT_CLASS="org.apache.flume.client.avro.AvroCLIClient"
 FLUME_VERSION_CLASS="org.apache.flume.tools.VersionInfo"
@@ -247,6 +249,9 @@ case "$mode" in
     opt_agent=1
     warn "The \"node\" command is deprecated. Please use \"agent\" instead."
     ;;
+  app)
+    app_main=1
+    ;;
   avro-client)
     opt_avro_client=1
     ;;
@@ -429,7 +434,9 @@ if [ -n "${opt_dryrun}" ]; then
 fi
 
 # finally, invoke the appropriate command
-if [ -n "$opt_agent" ] ; then
+if [ -n "$app_main" ] ; then
+  run_flume $FLUME_CLASS $args
+elif [ -n "$opt_agent" ] ; then
   run_flume $FLUME_AGENT_CLASS $args
 elif [ -n "$opt_avro_client" ] ; then
   run_flume $FLUME_AVRO_CLIENT_CLASS $args
@@ -440,5 +447,6 @@ elif [ -n "${opt_tool}" ] ; then
 else
   error "This message should never appear" 1
 fi
+
 
 exit 0
