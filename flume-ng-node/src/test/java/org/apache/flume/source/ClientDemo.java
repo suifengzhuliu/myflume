@@ -16,8 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.flume.service;
+package org.apache.flume.source;
 
+import org.apache.flume.service.FlumeControllerService;
+import org.apache.flume.service.Status;
+import org.apache.flume.service.FlumeControllerService.Client;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;

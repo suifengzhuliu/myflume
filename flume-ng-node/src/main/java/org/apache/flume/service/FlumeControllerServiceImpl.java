@@ -18,6 +18,7 @@
  */
 package org.apache.flume.service;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,9 +38,10 @@ public class FlumeControllerServiceImpl implements Iface {
 	private ConcurrentHashMap<String, Application> map = new ConcurrentHashMap<String, Application>();
 
 	@Override
-	public Status startFlumeAgent(String agentName, String prop) throws TException {
+	public Status startFlumeAgent(String agentName, FlumeAgent agent) throws TException {
 
 		try {
+			boolean res = geneConfToZK(agentName,agent);
 			Application application = null;
 			// get options
 			String zkConnectionStr = "localhost:2181";
@@ -72,12 +74,31 @@ public class FlumeControllerServiceImpl implements Iface {
 		return Status.OK;
 	}
 
+	/**
+	 * 将传过来的对象生成flume的配置模板，然后放到zk相应的位置
+	 * @param agentName
+	 * @param agent
+	 * @return
+	 */
+	private boolean geneConfToZK(String agentName, FlumeAgent agent) {
+	
+		
+		
+		return false;
+	}
+
 	@Override
 	public Status stopFlumeAgent(String agentName) throws TException {
 		if (map.get(agentName) != null) {
 			map.get(agentName).stop();
 		}
 		return Status.OK;
+	}
+
+	@Override
+	public Status modifyConf(String name, FlumeAgent agent) throws TException {
+	
+		return null;
 	}
 
 }
