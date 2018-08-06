@@ -29,8 +29,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.conf.ComponentConfiguration;
-import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+
+import com.google.common.collect.Maps;
 
 /**
  * Serialize flume events into the same format LogStash uses</p>
