@@ -63,7 +63,7 @@ limitations under the License.
     <freemarker.version>2.3.20</freemarker.version>
     <curator.version>2.6.0</curator.version>
     <derby.version>10.11.1.1</derby.version>
-    <elasticsearch.version>0.90.1</elasticsearch.version>
+    <elasticsearch.version>6.3.1</elasticsearch.version>
     <fasterxml.jackson.version>2.8.9</fasterxml.jackson.version>
     <fest-reflect.version>1.4</fest-reflect.version>
     <geronimo-jms.version>1.1.1</geronimo-jms.version>
@@ -114,6 +114,7 @@ limitations under the License.
     <xerces.version>2.9.1</xerces.version>
     <wiremock.version>1.53</wiremock.version>
     <zookeeper.version>3.4.5</zookeeper.version>
+     <log4j-core.version>2.11.1</log4j-core.version>
   </properties>
 
   <modules>
@@ -153,6 +154,7 @@ limitations under the License.
       </properties>
       <dependencyManagement>
         <dependencies>
+        
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>${hadoop.common.artifact.id}</artifactId>
@@ -180,7 +182,7 @@ limitations under the License.
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
             <version>${zookeeper.version}</version>
-            <scope>test</scope>
+            <!-- <scope>test</scope> -->
           </dependency>
         </dependencies>
       </dependencyManagement>
@@ -275,7 +277,7 @@ limitations under the License.
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
             <version>${zookeeper.version}</version>
-            <scope>test</scope>
+           <!--  <scope>test</scope> -->
           </dependency>
 
           <!-- only compatible with hadoop-2 -->
@@ -435,7 +437,7 @@ limitations under the License.
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
             <version>${zookeeper.version}</version>
-            <scope>test</scope>
+          <!--   <scope>test</scope> -->
           </dependency>
 
           <!-- only compatible with hadoop-2 -->
@@ -951,6 +953,7 @@ limitations under the License.
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -1582,6 +1585,13 @@ limitations under the License.
         <artifactId>curator-recipes</artifactId>
         <version>${curator.version}</version>
       </dependency>
+
+<dependency>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-core</artifactId>
+    <version>${log4j-core.version}</version>
+</dependency>
+
 
       <dependency>
         <groupId>org.apache.curator</groupId>
