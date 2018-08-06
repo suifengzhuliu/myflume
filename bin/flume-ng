@@ -224,8 +224,10 @@ run_flume() {
 # set default params
 FLUME_CLASSPATH=""
 FLUME_JAVA_LIBRARY_PATH=""
-JAVA_OPTS="-Xmx20m"
+JAVA_OPTS="-Xmx1024m -Xms1024m"
 LD_LIBRARY_PATH=""
+
+# -agentlib:jdwp=transport=dt_socket,address=10000,server=y,suspend=n
 
 opt_conf=""
 opt_classpath=""
