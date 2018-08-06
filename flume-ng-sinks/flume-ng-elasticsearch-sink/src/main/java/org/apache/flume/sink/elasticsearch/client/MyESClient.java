@@ -128,7 +128,7 @@ public class MyESClient implements ElasticSearchClient {
 		// XContentBuilder build = serializer.getContentBuilder(event);
 
 		String indexName = indexNameBuilder.getIndexName(event);
-		logger.info("the indexname is {},the indextype is {}", indexName, indexType);
+//		logger.info("the indexname is {},the indextype is {}", indexName, indexType);
 		indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(builder);
 		bulkRequestBuilder.add(indexRequestBuilder);
 	}
