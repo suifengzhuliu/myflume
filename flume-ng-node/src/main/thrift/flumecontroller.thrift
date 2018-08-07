@@ -24,6 +24,10 @@ enum Status {
   FAILED
 }
 
+struct ResponseState{
+	1: optional Status status
+	2: optional string msg
+}
 
 enum SourceType{
 	HTTP,
@@ -34,12 +38,13 @@ enum SourceType{
 
 enum SinkType{
 	ES,
-	HDFS
+	HDFS,
+	LOGGER
 }
 
 
 struct HttpSource{
-	1: required i32 port
+	1: required string port
 }
 
 struct KafkaSource{
@@ -47,7 +52,7 @@ struct KafkaSource{
 	2: required string topics
 	3: required string group
 	4: optional string topicsRegex
-	5: optional i32 batchSize
+	5: optional string batchSize
 }
 
 struct HDFSSource{
@@ -56,12 +61,12 @@ struct HDFSSource{
 
 struct DBSource{
 	1: required string host
-	2: required i32 port
+	2: required string port
 	3: required string username
 	4: required string password
 	5: required string dbName
 	6: required string sql
-	7: required i32 interval
+	7: required string interval
 }
 
 
@@ -78,9 +83,11 @@ struct HDFSSink{
 }
 
 
+
+
 struct FlumeAgent {                            
  
-1:required string name
+1:required string agentName
 2: required SourceType sourceType
 3: required SinkType SinkType
  
@@ -93,13 +100,15 @@ struct FlumeAgent {
 8:optional HDFSSink hdfsSink
 9:optional ESSink esSink
  
+ # 区别是否有状态服务,有状态服务只能在一个节点启动成功,无状态服务可以在多个机器启动成功
+10:required bool hasStateService
 }
 
 service   FlumeControllerService {
  
-  Status startFlumeAgent(1:string name 2:FlumeAgent agent)
-  Status stopFlumeAgent(1:string name)
+  ResponseState startFlumeAgent(1:FlumeAgent agent)
+  ResponseState stopFlumeAgent(1:string agentName)
   //Override if exist
-  Status modifyConf(1:string name 2:FlumeAgent agent)
+  ResponseState saveOrUpdateConf(1:FlumeAgent agent)
 }
 
