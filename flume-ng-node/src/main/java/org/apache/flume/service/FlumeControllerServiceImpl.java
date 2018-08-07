@@ -21,7 +21,6 @@ package org.apache.flume.service;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
@@ -91,14 +90,6 @@ public class FlumeControllerServiceImpl implements Iface {
 
 			map.put(agentName, application);
 
-			final Application appReference = application;
-			Runtime.getRuntime().addShutdownHook(new Thread("agent-shutdown-hook") {
-				@Override
-				public void run() {
-					appReference.stop();
-				}
-			});
-
 		} catch (Exception e) {
 			res.setMsg(e.getMessage());
 			res.setStatus(Status.FAILED);
@@ -131,7 +122,7 @@ public class FlumeControllerServiceImpl implements Iface {
 		res.setStatus(Status.OK);
 		res.setMsg("success");
 		try {
-
+			String agentName = agent.getAgentName();
 			Configuration cfg = new Configuration();
 			cfg.setObjectWrapper(new DefaultObjectWrapper());
 
@@ -149,7 +140,7 @@ public class FlumeControllerServiceImpl implements Iface {
 			writer.flush();
 			writer.close();
 
-			System.out.println("result  is string \n " + bOutput.toString());
+			logger.info("saveOrUpdateConf ,the name is {} ,the  conf is {}", agentName, bOutput.toString());
 
 			byte[] data = bOutput.toByteArray();
 			ZooKeeper zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
@@ -159,8 +150,6 @@ public class FlumeControllerServiceImpl implements Iface {
 					// "事件！");
 				}
 			});
-
-			String agentName = agent.getAgentName();
 
 			String zkAgentPath = getAgentBasePath();
 			if (!zkAgentPath.endsWith("\\/")) {

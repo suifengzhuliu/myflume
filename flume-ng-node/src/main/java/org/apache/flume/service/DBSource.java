@@ -18,6 +18,7 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
   private static final org.apache.thrift.protocol.TField DB_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("dbName", org.apache.thrift.protocol.TType.STRING, (short)5);
   private static final org.apache.thrift.protocol.TField SQL_FIELD_DESC = new org.apache.thrift.protocol.TField("sql", org.apache.thrift.protocol.TType.STRING, (short)6);
   private static final org.apache.thrift.protocol.TField INTERVAL_FIELD_DESC = new org.apache.thrift.protocol.TField("interval", org.apache.thrift.protocol.TType.STRING, (short)7);
+  private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)8);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new DBSourceStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new DBSourceTupleSchemeFactory();
@@ -29,6 +30,11 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
   public java.lang.String dbName; // required
   public java.lang.String sql; // required
   public java.lang.String interval; // required
+  /**
+   * 
+   * @see DBType
+   */
+  public DBType type; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -38,7 +44,12 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     PASSWORD((short)4, "password"),
     DB_NAME((short)5, "dbName"),
     SQL((short)6, "sql"),
-    INTERVAL((short)7, "interval");
+    INTERVAL((short)7, "interval"),
+    /**
+     * 
+     * @see DBType
+     */
+    TYPE((short)8, "type");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -67,6 +78,8 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
           return SQL;
         case 7: // INTERVAL
           return INTERVAL;
+        case 8: // TYPE
+          return TYPE;
         default:
           return null;
       }
@@ -124,6 +137,8 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.INTERVAL, new org.apache.thrift.meta_data.FieldMetaData("interval", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.TYPE, new org.apache.thrift.meta_data.FieldMetaData("type", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, DBType.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(DBSource.class, metaDataMap);
   }
@@ -138,7 +153,8 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     java.lang.String password,
     java.lang.String dbName,
     java.lang.String sql,
-    java.lang.String interval)
+    java.lang.String interval,
+    DBType type)
   {
     this();
     this.host = host;
@@ -148,6 +164,7 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     this.dbName = dbName;
     this.sql = sql;
     this.interval = interval;
+    this.type = type;
   }
 
   /**
@@ -175,6 +192,9 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     if (other.isSetInterval()) {
       this.interval = other.interval;
     }
+    if (other.isSetType()) {
+      this.type = other.type;
+    }
   }
 
   public DBSource deepCopy() {
@@ -190,6 +210,7 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     this.dbName = null;
     this.sql = null;
     this.interval = null;
+    this.type = null;
   }
 
   public java.lang.String getHost() {
@@ -360,6 +381,38 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     }
   }
 
+  /**
+   * 
+   * @see DBType
+   */
+  public DBType getType() {
+    return this.type;
+  }
+
+  /**
+   * 
+   * @see DBType
+   */
+  public DBSource setType(DBType type) {
+    this.type = type;
+    return this;
+  }
+
+  public void unsetType() {
+    this.type = null;
+  }
+
+  /** Returns true if field type is set (has been assigned a value) and false otherwise */
+  public boolean isSetType() {
+    return this.type != null;
+  }
+
+  public void setTypeIsSet(boolean value) {
+    if (!value) {
+      this.type = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case HOST:
@@ -418,6 +471,14 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
       }
       break;
 
+    case TYPE:
+      if (value == null) {
+        unsetType();
+      } else {
+        setType((DBType)value);
+      }
+      break;
+
     }
   }
 
@@ -444,6 +505,9 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     case INTERVAL:
       return getInterval();
 
+    case TYPE:
+      return getType();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -469,6 +533,8 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
       return isSetSql();
     case INTERVAL:
       return isSetInterval();
+    case TYPE:
+      return isSetType();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -551,6 +617,15 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
         return false;
     }
 
+    boolean this_present_type = true && this.isSetType();
+    boolean that_present_type = true && that.isSetType();
+    if (this_present_type || that_present_type) {
+      if (!(this_present_type && that_present_type))
+        return false;
+      if (!this.type.equals(that.type))
+        return false;
+    }
+
     return true;
   }
 
@@ -585,6 +660,10 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     hashCode = hashCode * 8191 + ((isSetInterval()) ? 131071 : 524287);
     if (isSetInterval())
       hashCode = hashCode * 8191 + interval.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetType()) ? 131071 : 524287);
+    if (isSetType())
+      hashCode = hashCode * 8191 + type.getValue();
 
     return hashCode;
   }
@@ -667,6 +746,16 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetType()).compareTo(other.isSetType());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetType()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.type, other.type);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -742,6 +831,14 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
       sb.append(this.interval);
     }
     first = false;
+    if (!first) sb.append(", ");
+    sb.append("type:");
+    if (this.type == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.type);
+    }
+    first = false;
     sb.append(")");
     return sb.toString();
   }
@@ -768,6 +865,9 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
     }
     if (interval == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'interval' was not present! Struct: " + toString());
+    }
+    if (type == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'type' was not present! Struct: " + toString());
     }
     // check for sub-struct validity
   }
@@ -862,6 +962,14 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 8: // TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.type = org.apache.flume.service.DBType.findByValue(iprot.readI32());
+              struct.setTypeIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -912,6 +1020,11 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
         oprot.writeString(struct.interval);
         oprot.writeFieldEnd();
       }
+      if (struct.type != null) {
+        oprot.writeFieldBegin(TYPE_FIELD_DESC);
+        oprot.writeI32(struct.type.getValue());
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -936,6 +1049,7 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
       oprot.writeString(struct.dbName);
       oprot.writeString(struct.sql);
       oprot.writeString(struct.interval);
+      oprot.writeI32(struct.type.getValue());
     }
 
     @Override
@@ -955,6 +1069,8 @@ public class DBSource implements org.apache.thrift.TBase<DBSource, DBSource._Fie
       struct.setSqlIsSet(true);
       struct.interval = iprot.readString();
       struct.setIntervalIsSet(true);
+      struct.type = org.apache.flume.service.DBType.findByValue(iprot.readI32());
+      struct.setTypeIsSet(true);
     }
   }
 

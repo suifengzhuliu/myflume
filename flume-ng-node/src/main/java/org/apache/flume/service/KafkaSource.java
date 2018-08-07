@@ -14,25 +14,19 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
   private static final org.apache.thrift.protocol.TField SERVERS_FIELD_DESC = new org.apache.thrift.protocol.TField("servers", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField TOPICS_FIELD_DESC = new org.apache.thrift.protocol.TField("topics", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField GROUP_FIELD_DESC = new org.apache.thrift.protocol.TField("group", org.apache.thrift.protocol.TType.STRING, (short)3);
-  private static final org.apache.thrift.protocol.TField TOPICS_REGEX_FIELD_DESC = new org.apache.thrift.protocol.TField("topicsRegex", org.apache.thrift.protocol.TType.STRING, (short)4);
-  private static final org.apache.thrift.protocol.TField BATCH_SIZE_FIELD_DESC = new org.apache.thrift.protocol.TField("batchSize", org.apache.thrift.protocol.TType.STRING, (short)5);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new KafkaSourceStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new KafkaSourceTupleSchemeFactory();
 
   public java.lang.String servers; // required
   public java.lang.String topics; // required
-  public java.lang.String group; // required
-  public java.lang.String topicsRegex; // optional
-  public java.lang.String batchSize; // optional
+  public java.lang.String group; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     SERVERS((short)1, "servers"),
     TOPICS((short)2, "topics"),
-    GROUP((short)3, "group"),
-    TOPICS_REGEX((short)4, "topicsRegex"),
-    BATCH_SIZE((short)5, "batchSize");
+    GROUP((short)3, "group");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -53,10 +47,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
           return TOPICS;
         case 3: // GROUP
           return GROUP;
-        case 4: // TOPICS_REGEX
-          return TOPICS_REGEX;
-        case 5: // BATCH_SIZE
-          return BATCH_SIZE;
         default:
           return null;
       }
@@ -97,7 +87,7 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.TOPICS_REGEX,_Fields.BATCH_SIZE};
+  private static final _Fields optionals[] = {_Fields.GROUP};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -105,11 +95,7 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.TOPICS, new org.apache.thrift.meta_data.FieldMetaData("topics", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.GROUP, new org.apache.thrift.meta_data.FieldMetaData("group", org.apache.thrift.TFieldRequirementType.REQUIRED, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.TOPICS_REGEX, new org.apache.thrift.meta_data.FieldMetaData("topicsRegex", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.BATCH_SIZE, new org.apache.thrift.meta_data.FieldMetaData("batchSize", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.GROUP, new org.apache.thrift.meta_data.FieldMetaData("group", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(KafkaSource.class, metaDataMap);
@@ -120,13 +106,11 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
 
   public KafkaSource(
     java.lang.String servers,
-    java.lang.String topics,
-    java.lang.String group)
+    java.lang.String topics)
   {
     this();
     this.servers = servers;
     this.topics = topics;
-    this.group = group;
   }
 
   /**
@@ -142,12 +126,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
     if (other.isSetGroup()) {
       this.group = other.group;
     }
-    if (other.isSetTopicsRegex()) {
-      this.topicsRegex = other.topicsRegex;
-    }
-    if (other.isSetBatchSize()) {
-      this.batchSize = other.batchSize;
-    }
   }
 
   public KafkaSource deepCopy() {
@@ -159,8 +137,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
     this.servers = null;
     this.topics = null;
     this.group = null;
-    this.topicsRegex = null;
-    this.batchSize = null;
   }
 
   public java.lang.String getServers() {
@@ -235,54 +211,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
     }
   }
 
-  public java.lang.String getTopicsRegex() {
-    return this.topicsRegex;
-  }
-
-  public KafkaSource setTopicsRegex(java.lang.String topicsRegex) {
-    this.topicsRegex = topicsRegex;
-    return this;
-  }
-
-  public void unsetTopicsRegex() {
-    this.topicsRegex = null;
-  }
-
-  /** Returns true if field topicsRegex is set (has been assigned a value) and false otherwise */
-  public boolean isSetTopicsRegex() {
-    return this.topicsRegex != null;
-  }
-
-  public void setTopicsRegexIsSet(boolean value) {
-    if (!value) {
-      this.topicsRegex = null;
-    }
-  }
-
-  public java.lang.String getBatchSize() {
-    return this.batchSize;
-  }
-
-  public KafkaSource setBatchSize(java.lang.String batchSize) {
-    this.batchSize = batchSize;
-    return this;
-  }
-
-  public void unsetBatchSize() {
-    this.batchSize = null;
-  }
-
-  /** Returns true if field batchSize is set (has been assigned a value) and false otherwise */
-  public boolean isSetBatchSize() {
-    return this.batchSize != null;
-  }
-
-  public void setBatchSizeIsSet(boolean value) {
-    if (!value) {
-      this.batchSize = null;
-    }
-  }
-
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case SERVERS:
@@ -309,22 +237,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
       }
       break;
 
-    case TOPICS_REGEX:
-      if (value == null) {
-        unsetTopicsRegex();
-      } else {
-        setTopicsRegex((java.lang.String)value);
-      }
-      break;
-
-    case BATCH_SIZE:
-      if (value == null) {
-        unsetBatchSize();
-      } else {
-        setBatchSize((java.lang.String)value);
-      }
-      break;
-
     }
   }
 
@@ -338,12 +250,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
 
     case GROUP:
       return getGroup();
-
-    case TOPICS_REGEX:
-      return getTopicsRegex();
-
-    case BATCH_SIZE:
-      return getBatchSize();
 
     }
     throw new java.lang.IllegalStateException();
@@ -362,10 +268,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
       return isSetTopics();
     case GROUP:
       return isSetGroup();
-    case TOPICS_REGEX:
-      return isSetTopicsRegex();
-    case BATCH_SIZE:
-      return isSetBatchSize();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -412,24 +314,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
         return false;
     }
 
-    boolean this_present_topicsRegex = true && this.isSetTopicsRegex();
-    boolean that_present_topicsRegex = true && that.isSetTopicsRegex();
-    if (this_present_topicsRegex || that_present_topicsRegex) {
-      if (!(this_present_topicsRegex && that_present_topicsRegex))
-        return false;
-      if (!this.topicsRegex.equals(that.topicsRegex))
-        return false;
-    }
-
-    boolean this_present_batchSize = true && this.isSetBatchSize();
-    boolean that_present_batchSize = true && that.isSetBatchSize();
-    if (this_present_batchSize || that_present_batchSize) {
-      if (!(this_present_batchSize && that_present_batchSize))
-        return false;
-      if (!this.batchSize.equals(that.batchSize))
-        return false;
-    }
-
     return true;
   }
 
@@ -448,14 +332,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
     hashCode = hashCode * 8191 + ((isSetGroup()) ? 131071 : 524287);
     if (isSetGroup())
       hashCode = hashCode * 8191 + group.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetTopicsRegex()) ? 131071 : 524287);
-    if (isSetTopicsRegex())
-      hashCode = hashCode * 8191 + topicsRegex.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetBatchSize()) ? 131071 : 524287);
-    if (isSetBatchSize())
-      hashCode = hashCode * 8191 + batchSize.hashCode();
 
     return hashCode;
   }
@@ -498,26 +374,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetTopicsRegex()).compareTo(other.isSetTopicsRegex());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetTopicsRegex()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.topicsRegex, other.topicsRegex);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetBatchSize()).compareTo(other.isSetBatchSize());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetBatchSize()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.batchSize, other.batchSize);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     return 0;
   }
 
@@ -553,31 +409,13 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
       sb.append(this.topics);
     }
     first = false;
-    if (!first) sb.append(", ");
-    sb.append("group:");
-    if (this.group == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.group);
-    }
-    first = false;
-    if (isSetTopicsRegex()) {
+    if (isSetGroup()) {
       if (!first) sb.append(", ");
-      sb.append("topicsRegex:");
-      if (this.topicsRegex == null) {
+      sb.append("group:");
+      if (this.group == null) {
         sb.append("null");
       } else {
-        sb.append(this.topicsRegex);
-      }
-      first = false;
-    }
-    if (isSetBatchSize()) {
-      if (!first) sb.append(", ");
-      sb.append("batchSize:");
-      if (this.batchSize == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.batchSize);
+        sb.append(this.group);
       }
       first = false;
     }
@@ -592,9 +430,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
     }
     if (topics == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'topics' was not present! Struct: " + toString());
-    }
-    if (group == null) {
-      throw new org.apache.thrift.protocol.TProtocolException("Required field 'group' was not present! Struct: " + toString());
     }
     // check for sub-struct validity
   }
@@ -657,22 +492,6 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 4: // TOPICS_REGEX
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.topicsRegex = iprot.readString();
-              struct.setTopicsRegexIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 5: // BATCH_SIZE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.batchSize = iprot.readString();
-              struct.setBatchSizeIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -699,21 +518,9 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
         oprot.writeFieldEnd();
       }
       if (struct.group != null) {
-        oprot.writeFieldBegin(GROUP_FIELD_DESC);
-        oprot.writeString(struct.group);
-        oprot.writeFieldEnd();
-      }
-      if (struct.topicsRegex != null) {
-        if (struct.isSetTopicsRegex()) {
-          oprot.writeFieldBegin(TOPICS_REGEX_FIELD_DESC);
-          oprot.writeString(struct.topicsRegex);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.batchSize != null) {
-        if (struct.isSetBatchSize()) {
-          oprot.writeFieldBegin(BATCH_SIZE_FIELD_DESC);
-          oprot.writeString(struct.batchSize);
+        if (struct.isSetGroup()) {
+          oprot.writeFieldBegin(GROUP_FIELD_DESC);
+          oprot.writeString(struct.group);
           oprot.writeFieldEnd();
         }
       }
@@ -736,20 +543,13 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       oprot.writeString(struct.servers);
       oprot.writeString(struct.topics);
-      oprot.writeString(struct.group);
       java.util.BitSet optionals = new java.util.BitSet();
-      if (struct.isSetTopicsRegex()) {
+      if (struct.isSetGroup()) {
         optionals.set(0);
       }
-      if (struct.isSetBatchSize()) {
-        optionals.set(1);
-      }
-      oprot.writeBitSet(optionals, 2);
-      if (struct.isSetTopicsRegex()) {
-        oprot.writeString(struct.topicsRegex);
-      }
-      if (struct.isSetBatchSize()) {
-        oprot.writeString(struct.batchSize);
+      oprot.writeBitSet(optionals, 1);
+      if (struct.isSetGroup()) {
+        oprot.writeString(struct.group);
       }
     }
 
@@ -760,16 +560,10 @@ public class KafkaSource implements org.apache.thrift.TBase<KafkaSource, KafkaSo
       struct.setServersIsSet(true);
       struct.topics = iprot.readString();
       struct.setTopicsIsSet(true);
-      struct.group = iprot.readString();
-      struct.setGroupIsSet(true);
-      java.util.BitSet incoming = iprot.readBitSet(2);
+      java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
-        struct.topicsRegex = iprot.readString();
-        struct.setTopicsRegexIsSet(true);
-      }
-      if (incoming.get(1)) {
-        struct.batchSize = iprot.readString();
-        struct.setBatchSizeIsSet(true);
+        struct.group = iprot.readString();
+        struct.setGroupIsSet(true);
       }
     }
   }
