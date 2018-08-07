@@ -67,10 +67,11 @@ ${agentName}.sinks.k1.type = logger
 </#if>
 
 
-# Use a channel which buffers events in memory
-${agentName}.channels.c1.type = memory
-${agentName}.channels.c1.capacity = 1000
-${agentName}.channels.c1.transactionCapacity = 100
+
+${agentName}.channels.c1.type = file
+${agentName}.channels.c1.checkpointDir = /tmp/flume/${agentName}/checkpoint
+${agentName}.channels.c1.dataDirs = /tmp/flume/${agentName}/data
+
 
 # Bind the source and sink to the channel
 ${agentName}.sources.source1.channels = c1
