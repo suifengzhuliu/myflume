@@ -65,18 +65,13 @@ public class FlumeControllerServiceImpl implements Iface {
 			String zkAgentPath = getAgentBasePath();
 			String agentName = agent.getAgentName();
 
-			ZooKeeper zk = null;
-			try {
-				zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
-					// 监控所有被触发的事件
-					public void process(WatchedEvent event) {
-						// System.out.println("已经触发了" + event.getType() +
-						// "事件！");
-					}
-				});
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			ZooKeeper zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
+				// 监控所有被触发的事件
+				public void process(WatchedEvent event) {
+					// System.out.println("已经触发了" + event.getType() +
+					// "事件！");
+				}
+			});
 
 			Stat stat = zk.exists(zkAgentPath + agentName, true);
 			if (stat == null) {

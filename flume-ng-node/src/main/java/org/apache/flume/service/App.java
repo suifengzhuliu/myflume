@@ -18,6 +18,7 @@
  */
 package org.apache.flume.service;
 
+import org.apache.flume.util.PropertiesUtil;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TSimpleServer;
@@ -26,30 +27,29 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 启动类， 启动thrift服务，用于接受web端的请求，或者其他节点的相关服务,如做主备切换的时候fenceOldActive节点.
- * 
- * @author user
- *
- */
 public class App {
-	private static final Logger LOG = LoggerFactory.getLogger(App.class);
-	private static int SERVER_PORT = 30000;
+	private static final Logger logger = LoggerFactory.getLogger(App.class);
+	private static String DEFAULT_SERVER_PORT = "30000";
 
 	public static void main(String[] args) {
-		System.out.println("server start ....");
+		logger.info("server start ....");
+
+		String port = PropertiesUtil.readValue("thrift.service.port");
+		if (port.isEmpty()) {
+			port = DEFAULT_SERVER_PORT;
+		}
 		FlumeControllerService.Processor tprocessor = new FlumeControllerService.Processor(new FlumeControllerServiceImpl());
 		TServerSocket serverTransport;
 		try {
 
-			serverTransport = new TServerSocket(SERVER_PORT);
+			serverTransport = new TServerSocket(Integer.parseInt(port));
 			TServer.Args tArgs = new TServer.Args(serverTransport);
 			tArgs.processor(tprocessor);
 			tArgs.protocolFactory(new TBinaryProtocol.Factory());
 			TServer server = new TSimpleServer(tArgs);
 			server.serve();
 		} catch (TTransportException e) {
-			e.printStackTrace();
+			logger.error("start thrift service error,the msg is ", e);
 		}
 	}
 }
