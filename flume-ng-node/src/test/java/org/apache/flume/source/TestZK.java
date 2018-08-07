@@ -25,11 +25,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.flume.service.FlumeAgent;
+import org.apache.flume.service.HDFSSink;
+import org.apache.flume.service.KafkaSource;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -42,12 +44,11 @@ import org.junit.Test;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
-import freemarker.template.TemplateException;
 
 public class TestZK {
 	@Test
 	public void uploadFileToZK() throws KeeperException, InterruptedException {
-		String propFilePath = "/Users/user/work/flume/conf/example.conf";
+		String propFilePath = "/Users/user/work/flume/conf/kafka2es.conf";
 
 		ZooKeeper zk = null;
 		try {
@@ -58,7 +59,6 @@ public class TestZK {
 				}
 			});
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (zk.exists("/flume", true) == null) {
@@ -90,12 +90,12 @@ public class TestZK {
 		}
 
 		// 创建一个目录节点
-		Stat stat = zk.exists("/flume/a1", true);
+		Stat stat = zk.exists("/flume/agent/kafka2es", true);
 		if (stat == null) {
-			zk.create("/flume/a1", data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			zk.create("/flume/agent/kafka2es", data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 		} else {
-			zk.delete("/flume/a1", stat.getVersion());
-			zk.create("/flume/a1", data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			zk.delete("/flume/agent/kafka2es", stat.getVersion());
+			zk.create("/flume/agent/kafka2es", data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 		}
 	}
 
@@ -108,41 +108,56 @@ public class TestZK {
 
 			Template temp = cfg.getTemplate("config.properties"); // 模板文件，相对于setDirectoryForTemplateLoading设置的路径
 
-			Map<String, Object> root = new HashMap<String, Object>(); // 注意必须有一个根结点
-			root.put("agentName", "a1");
-			root.put("port", "1213");
+			FlumeAgent fa = new FlumeAgent();
+			fa.setAgentName("kafka2es");
+			fa.setSourceType(org.apache.flume.service.SourceType.KAFKA);
+			fa.setSinkType(org.apache.flume.service.SinkType.HDFS);
+
+			KafkaSource kafkaSource = new KafkaSource();
+			kafkaSource.setServers("localhost:9092");
+			kafkaSource.setTopics("test1, test2");
+			kafkaSource.setGroup("custom.g.id");
+			kafkaSource.setTopicsRegex("^topic[0-9]$");
+			kafkaSource.setBatchSize("1000");
+			fa.setKafkaSource(kafkaSource);
+
+			HDFSSink hs = new HDFSSink();
+			hs.setPath("hdfs://localhost:8020");
+			hs.setFilePrefix("events-");
+			fa.setHdfsSink(hs);
 
 			ByteArrayOutputStream bOutput = new ByteArrayOutputStream(1024);
 			Writer writer = new BufferedWriter(new OutputStreamWriter(bOutput, "UTF-8"));
 
-			temp.process(root, writer);
+			temp.process(fa, writer);
 			writer.flush();
 			writer.close();
 
 			System.out.println("result  is string \n " + bOutput.toString());
 
-			byte[] data = bOutput.toByteArray();
-			ZooKeeper zk = null;
-			try {
-				zk = new ZooKeeper("localhost:2181", 300000, new Watcher() {
-					// 监控所有被触发的事件
-					public void process(WatchedEvent event) {
-						System.out.println("已经触发了" + event.getType() + "事件！");
-					}
-				});
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			// 创建一个目录节点
-			Stat stat = zk.exists("/flume/a2", true);
-			if (stat == null) {
-				zk.create("/flume/a2", data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			} else {
-				zk.delete("/flume/a2", stat.getVersion());
-				zk.create("/flume/a2", data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			}
+			// byte[] data = bOutput.toByteArray();
+			// ZooKeeper zk = null;
+			// try {
+			// zk = new ZooKeeper("localhost:2181", 300000, new Watcher() {
+			// // 监控所有被触发的事件
+			// public void process(WatchedEvent event) {
+			// System.out.println("已经触发了" + event.getType() + "事件！");
+			// }
+			// });
+			// } catch (IOException e) {
+			// e.printStackTrace();
+			// }
+			//
+			// // 创建一个目录节点
+			// Stat stat = zk.exists("/flume/agent/a2", true);
+			// if (stat == null) {
+			// zk.create("/flume/agent/a2", data, Ids.OPEN_ACL_UNSAFE,
+			// CreateMode.PERSISTENT);
+			// } else {
+			// zk.delete("/flume/agent/a2", stat.getVersion());
+			// zk.create("/flume/agent/a2", data, Ids.OPEN_ACL_UNSAFE,
+			// CreateMode.PERSISTENT);
+			// }
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -26,13 +26,13 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.flume.lifecycle.LifecycleAware;
 import org.apache.flume.node.Application;
 import org.apache.flume.node.PollingZooKeeperConfigurationProvider;
 import org.apache.flume.service.FlumeControllerService.Iface;
+import org.apache.flume.util.PropertiesUtil;
 import org.apache.thrift.TException;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.WatchedEvent;
@@ -53,23 +53,41 @@ import freemarker.template.Template;
 public class FlumeControllerServiceImpl implements Iface {
 	private static final Logger logger = LoggerFactory.getLogger(FlumeControllerServiceImpl.class);
 	private ConcurrentHashMap<String, Application> map = new ConcurrentHashMap<String, Application>();
+	private String zkAddress = PropertiesUtil.readValue("zkAddress");
 
 	@Override
-	public Status startFlumeAgent(FlumeAgent agent) throws TException {
-
+	public ResponseState startFlumeAgent(FlumeAgent agent) throws TException {
+		ResponseState res = new ResponseState();
+		res.setStatus(Status.OK);
+		res.setMsg("success");
 		try {
-			Status res = modifyConf(agent);
-			Application application = null;
-			// get options
-			String zkConnectionStr = "localhost:2181";
-			String baseZkPath = "/flume/agent";
 
+			String zkAgentPath = getAgentBasePath();
 			String agentName = agent.getAgentName();
+
+			ZooKeeper zk = null;
+			try {
+				zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
+					// 监控所有被触发的事件
+					public void process(WatchedEvent event) {
+						// System.out.println("已经触发了" + event.getType() +
+						// "事件！");
+					}
+				});
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			Stat stat = zk.exists(zkAgentPath + agentName, true);
+			if (stat == null) {
+				saveOrUpdateConf(agent);
+			}
+			Application application = null;
 
 			EventBus eventBus = new EventBus(agentName + "-event-bus");
 			List<LifecycleAware> components = Lists.newArrayList();
-			PollingZooKeeperConfigurationProvider zookeeperConfigurationProvider = new PollingZooKeeperConfigurationProvider(agentName, zkConnectionStr,
-					baseZkPath, eventBus);
+			PollingZooKeeperConfigurationProvider zookeeperConfigurationProvider = new PollingZooKeeperConfigurationProvider(agentName, zkAddress, zkAgentPath,
+					eventBus);
 			components.add(zookeeperConfigurationProvider);
 			application = new Application(components);
 			eventBus.register(application);
@@ -87,35 +105,43 @@ public class FlumeControllerServiceImpl implements Iface {
 			});
 
 		} catch (Exception e) {
-			logger.error("A fatal error occurred while running. Exception follows.", e);
+			res.setMsg(e.getMessage());
+			res.setStatus(Status.FAILED);
+			logger.error("A fatal error occurred while start flume agent. Exception follows.", e);
 		}
 
-		return Status.OK;
+		return res;
 	}
 
 	@Override
-	public Status stopFlumeAgent(String agentName) throws TException {
+	public ResponseState stopFlumeAgent(String agentName) throws TException {
+		ResponseState res = new ResponseState();
+		res.setStatus(Status.OK);
+		res.setMsg("success");
+
 		if (map.get(agentName) != null) {
 			map.get(agentName).stop();
+			return res;
+		} else {
+			res.setMsg("the flume { " + agentName + " } is not running  ");
+			res.setStatus(Status.FAILED);
+			logger.error("stop flume agent error,the flume agent {} is not running ", agentName);
 		}
-		return Status.OK;
+		return res;
 	}
 
 	@Override
-	public Status modifyConf(FlumeAgent agent) throws TException {
-
+	public ResponseState saveOrUpdateConf(FlumeAgent agent) throws TException {
+		ResponseState res = new ResponseState();
+		res.setStatus(Status.OK);
+		res.setMsg("success");
 		try {
 
-			Properties p = new Properties();
 			Configuration cfg = new Configuration();
-			// cfg.setDirectoryForTemplateLoading(new
-			// File("/Users/user/git/apache-flume-1.8.0-src/flume-ng-node/src/test/resources"));
-			// // 模板父路径
 			cfg.setObjectWrapper(new DefaultObjectWrapper());
 
 			ClassLoader classLoader = getClass().getClassLoader();
 			URL url = classLoader.getResource("flume.ftl");
-			// URL url = this.getClass().getResource("/flume.ftl");
 			String fileStr = url.getFile();
 			File file = new File(fileStr);
 			cfg.setDirectoryForTemplateLoading(file.getParentFile());
@@ -131,34 +157,44 @@ public class FlumeControllerServiceImpl implements Iface {
 			System.out.println("result  is string \n " + bOutput.toString());
 
 			byte[] data = bOutput.toByteArray();
-			ZooKeeper zk = null;
-			try {
-				zk = new ZooKeeper("localhost:2181", 300000, new Watcher() {
-					// 监控所有被触发的事件
-					public void process(WatchedEvent event) {
-						System.out.println("已经触发了" + event.getType() + "事件！");
-					}
-				});
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			ZooKeeper zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
+				// 监控所有被触发的事件
+				public void process(WatchedEvent event) {
+					// System.out.println("已经触发了" + event.getType() +
+					// "事件！");
+				}
+			});
 
 			String agentName = agent.getAgentName();
 
+			String zkAgentPath = getAgentBasePath();
+			if (!zkAgentPath.endsWith("\\/")) {
+				zkAgentPath = zkAgentPath + "/";
+			}
 			// 创建一个目录节点
-			Stat stat = zk.exists("/flume/agent/" + agentName, true);
+			Stat stat = zk.exists(zkAgentPath + agentName, true);
 			if (stat == null) {
-				zk.create("/flume/agent/" + agentName, data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+				zk.create(zkAgentPath + agentName, data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			} else {
-				zk.delete("/flume/agent/" + agentName, stat.getVersion());
-				zk.create("/flume/agent/" + agentName, data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+				zk.delete(zkAgentPath + agentName, stat.getVersion());
+				zk.create(zkAgentPath + agentName, data, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			res.setMsg(e.getMessage());
+			res.setStatus(Status.FAILED);
+			logger.error("save or update flume conf error ,the error msg is ", e);
 		}
 
-		return Status.OK;
+		return res;
 	}
 
+	public String getAgentBasePath() throws Exception {
+		String zkAgentPath = PropertiesUtil.readValue("zkAgentPath");
+		if (zkAgentPath.isEmpty()) {
+			logger.error("the zkAgentPath is empty");
+			throw new Exception("the zkAgentPath is empty");
+		}
+		return zkAgentPath;
+	}
 }
