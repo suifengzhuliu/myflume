@@ -26,7 +26,11 @@ import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PropertiesUtil {
+	private static final Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
 
 	// 根据key读取value
 	public static String readValue(String key) {
@@ -38,7 +42,7 @@ public class PropertiesUtil {
 			String value = props.getProperty(key);
 			return value;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("read properties file error,the error msg is ", e);
 			return null;
 		}
 	}
