@@ -41,6 +41,7 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -54,16 +55,19 @@ public class FlumeControllerServiceImpl implements Iface {
 	private ConcurrentHashMap<String, Application> map = new ConcurrentHashMap<String, Application>();
 	private String zkAddress = PropertiesUtil.readValue("zkAddress");
 
+	public static final String MDC_AGENTNAME = "agentname";
+
 	@Override
 	public ResponseState startFlumeAgent(FlumeAgent agent) throws TException {
 		ResponseState res = new ResponseState();
 		res.setStatus(Status.OK);
 		res.setMsg("success");
 		try {
-
-			String zkAgentPath = getAgentBasePath();
+		
+			
 			String agentName = agent.getAgentName();
-
+			MDC.put(MDC_AGENTNAME, agentName);
+			String zkAgentPath = getAgentBasePath();
 			ZooKeeper zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
 				// 监控所有被触发的事件
 				public void process(WatchedEvent event) {
@@ -72,7 +76,7 @@ public class FlumeControllerServiceImpl implements Iface {
 				}
 			});
 
-			Stat stat = zk.exists(zkAgentPath + agentName, true);
+			Stat stat = zk.exists(zkAgentPath + "/" + agentName, true);
 			if (stat == null) {
 				saveOrUpdateConf(agent);
 			}
@@ -85,7 +89,7 @@ public class FlumeControllerServiceImpl implements Iface {
 			components.add(zookeeperConfigurationProvider);
 			application = new Application(components);
 			eventBus.register(application);
-
+			
 			application.start();
 
 			map.put(agentName, application);
@@ -94,6 +98,8 @@ public class FlumeControllerServiceImpl implements Iface {
 			res.setMsg(e.getMessage());
 			res.setStatus(Status.FAILED);
 			logger.error("A fatal error occurred while start flume agent. Exception follows.", e);
+		} finally {
+			MDC.remove(MDC_AGENTNAME);
 		}
 
 		return res;
@@ -105,13 +111,18 @@ public class FlumeControllerServiceImpl implements Iface {
 		res.setStatus(Status.OK);
 		res.setMsg("success");
 
-		if (map.get(agentName) != null) {
-			map.get(agentName).stop();
-			return res;
-		} else {
-			res.setMsg("the flume { " + agentName + " } is not running  ");
-			res.setStatus(Status.FAILED);
-			logger.error("stop flume agent error,the flume agent {} is not running ", agentName);
+		try {
+			MDC.put(MDC_AGENTNAME, agentName);
+			if (map.get(agentName) != null) {
+				map.get(agentName).stop();
+				return res;
+			} else {
+				res.setMsg("the flume { " + agentName + " } is not running  ");
+				res.setStatus(Status.FAILED);
+				logger.error("stop flume agent error,the flume agent {} is not running ", agentName);
+			}
+		} finally {
+			MDC.remove(MDC_AGENTNAME);
 		}
 		return res;
 	}

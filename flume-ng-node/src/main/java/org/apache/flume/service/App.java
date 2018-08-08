@@ -35,7 +35,7 @@ public class App {
 		logger.info("server start ....");
 
 		String port = PropertiesUtil.readValue("thrift.service.port");
-		if (port.isEmpty()) {
+		if (null == port || port.length() == 0) {
 			port = DEFAULT_SERVER_PORT;
 		}
 		FlumeControllerService.Processor tprocessor = new FlumeControllerService.Processor(new FlumeControllerServiceImpl());
