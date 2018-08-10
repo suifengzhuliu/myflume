@@ -26,11 +26,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.flume.service.ESSink;
 import org.apache.flume.service.FlumeAgent;
+import org.apache.flume.service.FlumeControllerServiceImpl;
+import org.apache.flume.service.FlumeSink;
+import org.apache.flume.service.FlumeSource;
 import org.apache.flume.service.HDFSSink;
+import org.apache.flume.service.Interceptor;
+import org.apache.flume.service.KafkaSink;
 import org.apache.flume.service.KafkaSource;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -40,12 +48,37 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 
 public class TestZK {
+	private static final Logger LOG = LoggerFactory.getLogger(FlumeControllerServiceImpl.class);
+	private ZooKeeper zkClient;
+	private final int zkSessionTimeout = 30000;
+
+	@Test
+	public void testNodeDelete() {
+		ZooKeeper zk = null;
+		try {
+			zk = new ZooKeeper("localhost:2181", 300000, new Watcher() {
+				// 监控所有被触发的事件
+				public void process(WatchedEvent event) {
+					System.out.println("已经触发了" + event.getType() + "事件！");
+				}
+			});
+
+			zk.create("/nodedeletetest", "test".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
+
+			Thread.sleep(1000 * 60);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Test
 	public void uploadFileToZK() throws KeeperException, InterruptedException {
 		String propFilePath = "/Users/user/work/flume/conf/kafka2es.conf";
@@ -100,31 +133,82 @@ public class TestZK {
 	}
 
 	@Test
-	public void testWriteToZK() {
+	public void testParseConfFile() {
 		try {
 			Configuration cfg = new Configuration();
-			cfg.setDirectoryForTemplateLoading(new File("/Users/user/git/apache-flume-1.8.0-src/flume-ng-node/src/test/resources")); // 模板父路径
+			cfg.setDirectoryForTemplateLoading(
+					new File("/Users/user/git/apache-flume-1.8.0-src/flume-ng-node/src/main/resources")); // 模板父路径
 			cfg.setObjectWrapper(new DefaultObjectWrapper());
 
-			Template temp = cfg.getTemplate("config.properties"); // 模板文件，相对于setDirectoryForTemplateLoading设置的路径
+			Template temp = cfg.getTemplate("flume.ftl"); // 模板文件，相对于setDirectoryForTemplateLoading设置的路径
 
 			FlumeAgent fa = new FlumeAgent();
 			fa.setAgentName("kafka2es");
-			fa.setSourceType(org.apache.flume.service.SourceType.KAFKA);
-			fa.setSinkType(org.apache.flume.service.SinkType.HDFS);
 
+			List<FlumeSource> sourceList = new ArrayList<>();
+
+			FlumeSource fs = new FlumeSource();
+			fs.setSourceType(org.apache.flume.service.SourceType.KAFKA);
 			KafkaSource kafkaSource = new KafkaSource();
 			kafkaSource.setServers("localhost:9092");
 			kafkaSource.setTopics("test1, test2");
 			kafkaSource.setGroup("custom.g.id");
-			kafkaSource.setTopicsRegex("^topic[0-9]$");
-			kafkaSource.setBatchSize("1000");
-			fa.setKafkaSource(kafkaSource);
 
+			Interceptor i = new Interceptor();
+			i.setType("org.apache.flume.interceptor.HostInterceptor$Builder");
+			Map params = new HashMap<>();
+			params.put("preserveExisting", "false");
+			params.put("hostHeader", "hostname");
+			i.setParams(params);
+
+			Interceptor i1 = new Interceptor();
+			i1.setType("org.apache.flume.interceptor.TimestampInterceptor$Builder");
+
+			List<Interceptor> interceptorList = new ArrayList<>();
+			interceptorList.add(i);
+			interceptorList.add(i1);
+
+			fs.setInterceptorList(interceptorList);
+			fs.setKafkaSource(kafkaSource);
+			sourceList.add(fs);
+
+			FlumeSource fs1 = new FlumeSource();
+			fs1.setSourceType(org.apache.flume.service.SourceType.KAFKA);
+			KafkaSource kafkaSource1 = new KafkaSource();
+			kafkaSource1.setServers("localhost:9093");
+			kafkaSource1.setTopics("test3, test4");
+			kafkaSource1.setGroup("custom");
+			fs1.setKafkaSource(kafkaSource1);
+			sourceList.add(fs1);
+
+			List<FlumeSink> sinkList = new ArrayList<>();
+			FlumeSink flumeSink = new FlumeSink();
+			flumeSink.setSinkType(org.apache.flume.service.SinkType.HDFS);
 			HDFSSink hs = new HDFSSink();
 			hs.setPath("hdfs://localhost:8020");
 			hs.setFilePrefix("events-");
-			fa.setHdfsSink(hs);
+			flumeSink.setHdfsSink(hs);
+			sinkList.add(flumeSink);
+
+			FlumeSink flumeSink1 = new FlumeSink();
+			flumeSink1.setSinkType(org.apache.flume.service.SinkType.ES);
+			ESSink essink = new ESSink();
+			essink.setClusterName("elastic");
+			essink.setHostNames("localhost:9200");
+			essink.setIndexName("indexname");
+			flumeSink1.setEsSink(essink);
+			sinkList.add(flumeSink1);
+
+			FlumeSink flumeSink2 = new FlumeSink();
+			flumeSink2.setSinkType(org.apache.flume.service.SinkType.KAFKA);
+			KafkaSink ks = new KafkaSink();
+			ks.setTopic("my topic");
+			ks.setServers("localhost");
+			flumeSink2.setKafkaSink(ks);
+			sinkList.add(flumeSink2);
+
+			fa.setSourceList(sourceList);
+			fa.setSinkList(sinkList);
 
 			ByteArrayOutputStream bOutput = new ByteArrayOutputStream(1024);
 			Writer writer = new BufferedWriter(new OutputStreamWriter(bOutput, "UTF-8"));
@@ -134,30 +218,6 @@ public class TestZK {
 			writer.close();
 
 			System.out.println("result  is string \n " + bOutput.toString());
-
-			// byte[] data = bOutput.toByteArray();
-			// ZooKeeper zk = null;
-			// try {
-			// zk = new ZooKeeper("localhost:2181", 300000, new Watcher() {
-			// // 监控所有被触发的事件
-			// public void process(WatchedEvent event) {
-			// System.out.println("已经触发了" + event.getType() + "事件！");
-			// }
-			// });
-			// } catch (IOException e) {
-			// e.printStackTrace();
-			// }
-			//
-			// // 创建一个目录节点
-			// Stat stat = zk.exists("/flume/agent/a2", true);
-			// if (stat == null) {
-			// zk.create("/flume/agent/a2", data, Ids.OPEN_ACL_UNSAFE,
-			// CreateMode.PERSISTENT);
-			// } else {
-			// zk.delete("/flume/agent/a2", stat.getVersion());
-			// zk.create("/flume/agent/a2", data, Ids.OPEN_ACL_UNSAFE,
-			// CreateMode.PERSISTENT);
-			// }
 
 		} catch (Exception e) {
 			e.printStackTrace();

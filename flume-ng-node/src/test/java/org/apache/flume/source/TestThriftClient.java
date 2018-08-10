@@ -41,12 +41,12 @@ public class TestThriftClient {
 	public void init() {
 
 		fa.setAgentName("kafka2es");
-		fa.setSourceType(org.apache.flume.service.SourceType.HTTP);
-		fa.setSinkType(org.apache.flume.service.SinkType.LOGGER);
+//		fa.setSourceType(org.apache.flume.service.SourceType.HTTP);
+//		fa.setSinkType(org.apache.flume.service.SinkType.LOGGER);
 
 		org.apache.flume.service.HttpSource hs = new org.apache.flume.service.HttpSource();
 		hs.setPort("44444");
-		fa.setHttpSource(hs);
+//		fa.setHttpSource(hs);
 		// KafkaSource kafkaSource = new KafkaSource();
 		// kafkaSource.setServers("localhost:9092");
 		// kafkaSource.setTopics("test1, test2");
@@ -88,8 +88,8 @@ public class TestThriftClient {
 	private FlumeAgent getKafka2esAgent() {
 		FlumeAgent fa = new FlumeAgent();
 		fa.setAgentName("kafka2es");
-		fa.setSourceType(org.apache.flume.service.SourceType.KAFKA);
-		fa.setSinkType(org.apache.flume.service.SinkType.ES);
+//		fa.setSourceType(org.apache.flume.service.SourceType.KAFKA);
+//		fa.setSinkType(org.apache.flume.service.SinkType.ES);
 
 		// KafkaSource kafkaSource = new KafkaSource();
 		// kafkaSource.setServers("localhost:9092");
