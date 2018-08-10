@@ -10,7 +10,8 @@ package org.apache.flume.service;
 public enum SinkType implements org.apache.thrift.TEnum {
   ES(0),
   HDFS(1),
-  LOGGER(2);
+  KAFKA(2),
+  LOGGER(3);
 
   private final int value;
 
@@ -36,6 +37,8 @@ public enum SinkType implements org.apache.thrift.TEnum {
       case 1:
         return HDFS;
       case 2:
+        return KAFKA;
+      case 3:
         return LOGGER;
       default:
         return null;

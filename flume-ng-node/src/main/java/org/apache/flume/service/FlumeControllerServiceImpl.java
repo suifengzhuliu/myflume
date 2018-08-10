@@ -31,11 +31,12 @@ import org.apache.flume.lifecycle.LifecycleAware;
 import org.apache.flume.node.Application;
 import org.apache.flume.node.PollingZooKeeperConfigurationProvider;
 import org.apache.flume.service.FlumeControllerService.Iface;
+import org.apache.flume.util.AddressUtils;
 import org.apache.flume.util.PropertiesUtil;
+import org.apache.flume.util.ZooKeeperSingleton;
 import org.apache.thrift.TException;
+import org.apache.zookeeper.AsyncCallback.StatCallback;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
@@ -50,10 +51,9 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 
-public class FlumeControllerServiceImpl implements Iface {
+public class FlumeControllerServiceImpl implements Iface,StatCallback {
 	private static final Logger logger = LoggerFactory.getLogger(FlumeControllerServiceImpl.class);
 	private ConcurrentHashMap<String, Application> map = new ConcurrentHashMap<String, Application>();
-	private String zkAddress = PropertiesUtil.readValue("zkAddress");
 
 	public static final String MDC_AGENTNAME = "agentname";
 
@@ -63,18 +63,12 @@ public class FlumeControllerServiceImpl implements Iface {
 		res.setStatus(Status.OK);
 		res.setMsg("success");
 		try {
-		
-			
+
 			String agentName = agent.getAgentName();
 			MDC.put(MDC_AGENTNAME, agentName);
 			String zkAgentPath = getAgentBasePath();
-			ZooKeeper zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
-				// 监控所有被触发的事件
-				public void process(WatchedEvent event) {
-					// System.out.println("已经触发了" + event.getType() +
-					// "事件！");
-				}
-			});
+
+			ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
 
 			Stat stat = zk.exists(zkAgentPath + "/" + agentName, true);
 			if (stat == null) {
@@ -84,14 +78,16 @@ public class FlumeControllerServiceImpl implements Iface {
 
 			EventBus eventBus = new EventBus(agentName + "-event-bus");
 			List<LifecycleAware> components = Lists.newArrayList();
+			String zkAddress = PropertiesUtil.readValue("zkAddress");
 			PollingZooKeeperConfigurationProvider zookeeperConfigurationProvider = new PollingZooKeeperConfigurationProvider(agentName, zkAddress, zkAgentPath,
 					eventBus);
 			components.add(zookeeperConfigurationProvider);
 			application = new Application(components);
 			eventBus.register(application);
-			
+
 			application.start();
 
+			add2zk(agentName);
 			map.put(agentName, application);
 
 		} catch (Exception e) {
@@ -105,11 +101,42 @@ public class FlumeControllerServiceImpl implements Iface {
 		return res;
 	}
 
+	/**
+	 * 启动成功的节点保存在zk里 ,flume重启的时候从zk里加载已经启动的agent列表,来决定启动哪些agent 目录节点
+	 * /flume/activelist/${agentname}/${host1} /${host2}
+	 * 
+	 * @param agentName
+	 */
+	private void add2zk(String agentName) {
+		ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
+
+		try {
+			String activeAgentPath = PropertiesUtil.readValue("zk.agent.activelist");
+			Stat stat = zk.exists(activeAgentPath + agentName, true);
+			if (stat == null) {
+				zk.create(activeAgentPath + agentName, null, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
+			zk.create(activeAgentPath + agentName + "/" + AddressUtils.getHostIp(), null, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
 	@Override
 	public ResponseState stopFlumeAgent(String agentName) throws TException {
 		ResponseState res = new ResponseState();
 		res.setStatus(Status.OK);
 		res.setMsg("success");
+
+		try {
+			ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
+			String activeAgentPath = PropertiesUtil.readValue("zk.agent.activelist");
+			zk.delete(activeAgentPath + agentName + "/" + AddressUtils.getHostIp(), -1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		try {
 			MDC.put(MDC_AGENTNAME, agentName);
@@ -154,13 +181,7 @@ public class FlumeControllerServiceImpl implements Iface {
 			logger.info("saveOrUpdateConf ,the name is {} ,the  conf is {}", agentName, bOutput.toString());
 
 			byte[] data = bOutput.toByteArray();
-			ZooKeeper zk = new ZooKeeper(zkAddress, 300000, new Watcher() {
-				// 监控所有被触发的事件
-				public void process(WatchedEvent event) {
-					// System.out.println("已经触发了" + event.getType() +
-					// "事件！");
-				}
-			});
+			ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
 
 			String zkAgentPath = getAgentBasePath();
 			if (!zkAgentPath.endsWith("\\/")) {
@@ -191,5 +212,11 @@ public class FlumeControllerServiceImpl implements Iface {
 			throw new Exception("the zkAgentPath is empty");
 		}
 		return zkAgentPath;
+	}
+
+	@Override
+	public void processResult(int rc, String path, Object ctx, Stat stat) {
+		// TODO Auto-generated method stub
+		
 	}
 }
