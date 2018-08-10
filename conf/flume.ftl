@@ -15,64 +15,104 @@
 # specific language governing permissions and limitations
 # under the License.
 
+<#assign sourceIndexs = ""/>
+<#assign sinkIndexs = ""/>
+<#list sourceList as flumesource>
+	<#assign sourceIndexs = sourceIndexs +" "+ "source${flumesource_index}"/>
+</#list>
 
-# agentName the components on this agent
-${agentName}.sources = source1
-${agentName}.sinks = k1
+<#list sinkList as flumesink>
+	<#assign sinkIndexs = sinkIndexs +" "+ "sink${flumesink_index}"/>
+</#list>
+
+
+${agentName}.sources = ${sourceIndexs}
+${agentName}.sinks = ${sinkIndexs}
 ${agentName}.channels = c1
 
 # Describe/configure the source
 
 
-<#if sourceType == 'HTTP'>
-${agentName}.sources.source1.type = http
-${agentName}.sources.source1.port = ${httpSource.port}
-<#elseif sourceType == 'KAFKA' >
-${agentName}.sources.source1.type = org.apache.flume.source.kafka.KafkaSource
-${agentName}.sources.source1.bootstrap.servers = ${kafkaSource.servers}
-${agentName}.sources.source1.topics = ${kafkaSource.topics}
-${agentName}.sources.source1.consumer.group.id = ${kafkaSource.group}
-		<#if kafkaSource.topicsRegex??>
-${agentName}.sources.source1.regex = ${kafkaSource.topicsRegex}
-	     </#if>
-	     <#if kafkaSource.batchSize??>
-${agentName}.sources.source1.batchSize = ${kafkaSource.batchSize}
-	     </#if>
-</#if> 
+<#list sourceList as flumesource>
 
+	<#if flumesource.sourceType == 'HTTP'>
+			${agentName}.sources.source${flumesource_index}.type = http
+			${agentName}.sources.source${flumesource_index}.port = ${flumesource.httpSource.port}
+	<#elseif flumesource.sourceType == 'KAFKA' >
+			${agentName}.sources.source${flumesource_index}.type = org.apache.flume.source.kafka.KafkaSource
+			${agentName}.sources.source${flumesource_index}.bootstrap.servers = ${flumesource.kafkaSource.servers}
+			${agentName}.sources.source${flumesource_index}.topics = ${flumesource.kafkaSource.topics}
+			${agentName}.sources.source${flumesource_index}.consumer.group.id = ${flumesource.kafkaSource.group}
+			<#if flumesource.kafkaSource.topicsRegex??>
+					    ${agentName}.sources.source${flumesource_index}.regex = ${flumesource.kafkaSource.topicsRegex}
+		     </#if>
+		     <#if flumesource.kafkaSource.batchSize??>
+						${agentName}.sources.source${flumesource_index}.batchSize = ${flumesource.kafkaSource.batchSize}
+		     </#if>
+	</#if> 
 
-
+      <#if flumesource.interceptorList?? && (flumesource.interceptorList?size > 0)  >
+      		<#assign interIndexs = ""/>
+	
+      		<#list flumesource.interceptorList as interceptor>
+      		<#assign interIndexs = interIndexs +" "+ "i${interceptor_index}"/>
+      		
+      			 					${agentName}.sources.source${flumesource_index}.interceptors.i${interceptor_index}.type = ${interceptor.type}
+      			  <#if interceptor.params??>
+      			  			<#list interceptor.params?keys as key>
+      			  					${agentName}.sources.source${flumesource_index}.interceptors.i${interceptor_index}.${key!} = ${interceptor.params[key]!}
+      			  			</#list>
+      			  </#if>
+            </#list>
+            
+            						 ${agentName}.sources.source${flumesource_index}.interceptors = ${interIndexs}
+	  </#if> 
+</#list>
 
 
 # Describe the sink
-<#if sinkType == 'ES'>
-${agentName}.sinks.k1.type = elasticsearch
-	<#if esSink.indexagentName??>
-${agentName}.sinks.k1.indexagentName = ${esSink.indexagentName}
-	</#if>
-	<#if esSink.indexType??>
-${agentName}.sinks.k1.indexType = ${esSink.indexType}
-	</#if>
-		<#if esSink.clusteragentName??>
-${agentName}.sinks.k1.clusteragentName = ${esSink.clusteragentName}
-	</#if>
-<#elseif sinkType == 'HDFS' >
-${agentName}.sinks.k1.type = hdfs
-${agentName}.sinks.k1.hdfs.path=${hdfsSink.path}
-	<#if hdfsSink.filePrefix??>
-${agentName}.sinks.k1.hdfs.filePrefix=${hdfsSink.filePrefix}
-	</#if>
-<#elseif sinkType == 'LOGGER' >
-${agentName}.sinks.k1.type = logger
-</#if>
 
+<#list sinkList as flumesink>
+
+	<#if flumesink.sinkType == 'ES'>
+				${agentName}.sinks.sink${flumesink_index}.type = elasticsearch
+		   <#if flumesink.esSink.hostNames??>
+				${agentName}.sinks.sink${flumesink_index}.hostNames = ${flumesink.esSink.hostNames}
+		  </#if>
+		  <#if flumesink.esSink.indexName??>
+				${agentName}.sinks.sink${flumesink_index}.indexName = ${flumesink.esSink.indexName}
+		  </#if>
+		   <#if flumesink.esSink.indexType??>
+				${agentName}.sinks.sink${flumesink_index}.indexType = ${flumesink.esSink.indexType}
+		   </#if>
+			<#if flumesink.esSink.clusterName??>
+				${agentName}.sinks.sink${flumesink_index}.clusterName = ${flumesink.esSink.clusterName}
+		    </#if>
+	<#elseif flumesink.sinkType == 'HDFS' >
+				${agentName}.sinks.sink${flumesink_index}.type = hdfs
+				${agentName}.sinks.sink${flumesink_index}.hdfs.path=${flumesink.hdfsSink.path}
+			<#if flumesink.hdfsSink.filePrefix??>
+				${agentName}.sinks.sink${flumesink_index}.hdfs.filePrefix=${flumesink.hdfsSink.filePrefix}
+			</#if>
+	<#elseif flumesink.sinkType == 'LOGGER' >
+				${agentName}.sinks.sink${flumesink_index}.type = logger
+	<#elseif flumesink.sinkType == 'KAFKA' >
+				${agentName}.sinks.sink${flumesink_index}.type = org.apache.flume.sink.kafka.KafkaSink
+				${agentName}.sinks.sink${flumesink_index}.kafka.topic = ${flumesink.kafkaSink.topic}
+				${agentName}.sinks.sink${flumesink_index}.kafka.bootstrap.servers  = ${flumesink.kafkaSink.servers}
+	</#if>
+
+</#list>
 
 
 ${agentName}.channels.c1.type = file
 ${agentName}.channels.c1.checkpointDir = /tmp/flume/${agentName}/checkpoint
 ${agentName}.channels.c1.dataDirs = /tmp/flume/${agentName}/data
 
-
 # Bind the source and sink to the channel
-${agentName}.sources.source1.channels = c1
-${agentName}.sinks.k1.channel = c1
+<#list sourceList as flumesource>
+	${agentName}.sources.source${flumesource_index}.channels = c1
+</#list>
+<#list sinkList as flumesink>
+	${agentName}.sinks.sink${flumesink_index}.channel = c1
+</#list>
