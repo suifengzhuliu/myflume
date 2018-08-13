@@ -74,15 +74,10 @@ public class FlumeControllerServiceImpl implements Iface {
 
 			String zkAgentPath = getAgentBasePath();
 
-			ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
-
-			Stat stat = zk.exists(zkAgentPath + "/" + agentName, true);
-			if (stat == null) {
-				saveOrUpdateConf(agent);
-			}
-
-			ActiveStandbyElector elector = new ActiveStandbyElector("localhost:2181", 5 * 1000, "/flume_test/a",
-					new ElectorCallbacks(), 3, true, agentName);
+			saveOrUpdateConf(agent);
+			add2zk(agentName);
+//			ActiveStandbyElector elector = new ActiveStandbyElector("localhost:2181", 5 * 1000, "/flume_test/a",
+//					new ElectorCallbacks(), 3, true, agentName);
 
 			Application application = null;
 
@@ -97,7 +92,7 @@ public class FlumeControllerServiceImpl implements Iface {
 
 			application.start();
 
-			add2zk(agentName);
+		
 			map.put(agentName, application);
 
 		} catch (Exception e) {
@@ -113,9 +108,9 @@ public class FlumeControllerServiceImpl implements Iface {
 
 	private void checkServiceState(List<FlumeSource> sourceList) {
 		for (FlumeSource flumeSource : sourceList) {
-			
+
 		}
-		
+
 	}
 
 	/**
