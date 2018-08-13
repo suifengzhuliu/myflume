@@ -83,6 +83,7 @@ struct ESSink{
 	2: optional string indexName
 	3: optional string indexType
 	4: optional string clusterName
+	5: optional string contentType
 }
 
 struct HDFSSink{
