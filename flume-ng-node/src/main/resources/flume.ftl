@@ -40,9 +40,9 @@ ${agentName}.channels = c1
 			${agentName}.sources.source${flumesource_index}.port = ${flumesource.httpSource.port}
 	<#elseif flumesource.sourceType == 'KAFKA' >
 			${agentName}.sources.source${flumesource_index}.type = org.apache.flume.source.kafka.KafkaSource
-			${agentName}.sources.source${flumesource_index}.bootstrap.servers = ${flumesource.kafkaSource.servers}
-			${agentName}.sources.source${flumesource_index}.topics = ${flumesource.kafkaSource.topics}
-			${agentName}.sources.source${flumesource_index}.consumer.group.id = ${flumesource.kafkaSource.group}
+			${agentName}.sources.source${flumesource_index}.kafka.bootstrap.servers = ${flumesource.kafkaSource.servers}
+			${agentName}.sources.source${flumesource_index}.kafka.topics = ${flumesource.kafkaSource.topics}
+			${agentName}.sources.source${flumesource_index}.kafka.consumer.group.id = ${flumesource.kafkaSource.group}
 			<#if flumesource.kafkaSource.topicsRegex??>
 					    ${agentName}.sources.source${flumesource_index}.regex = ${flumesource.kafkaSource.topicsRegex}
 		     </#if>
@@ -87,6 +87,9 @@ ${agentName}.channels = c1
 		   </#if>
 			<#if flumesink.esSink.clusterName??>
 				${agentName}.sinks.sink${flumesink_index}.clusterName = ${flumesink.esSink.clusterName}
+		    </#if>
+		    <#if flumesink.esSink.contentType??>
+				${agentName}.sinks.sink${flumesink_index}.contentType = ${flumesink.esSink.contentType}
 		    </#if>
 	<#elseif flumesink.sinkType == 'HDFS' >
 				${agentName}.sinks.sink${flumesink_index}.type = hdfs

@@ -18,8 +18,20 @@
  */
 package org.apache.flume.source;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.flume.service.ESSink;
 import org.apache.flume.service.FlumeAgent;
 import org.apache.flume.service.FlumeControllerService;
+import org.apache.flume.service.FlumeSink;
+import org.apache.flume.service.FlumeSource;
+import org.apache.flume.service.HDFSSink;
+import org.apache.flume.service.Interceptor;
+import org.apache.flume.service.KafkaSink;
+import org.apache.flume.service.KafkaSource;
 import org.apache.flume.service.ResponseState;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -65,7 +77,7 @@ public class TestThriftClient {
 	public void testStart() {
 		TTransport transport = null;
 
-		FlumeAgent fa = getKafka2esAgent();
+		FlumeAgent fa = getTest1Agent();
 
 		try {
 			transport = new TSocket(SERVER_IP, SERVER_PORT, TIMEOUT);
@@ -73,7 +85,7 @@ public class TestThriftClient {
 			FlumeControllerService.Client client = new FlumeControllerService.Client(protocol);
 			transport.open();
 			ResponseState result = client.startFlumeAgent(fa);
-			System.out.println("thrift remote call : " + result.status);
+			System.out.println("thrift remote call : " + result.msg);
 		} catch (TTransportException e) {
 			e.printStackTrace();
 		} catch (TException e) {
@@ -85,24 +97,117 @@ public class TestThriftClient {
 		}
 	}
 
+	private FlumeAgent getTest1Agent() {
+		FlumeAgent fa = new FlumeAgent();
+		fa.setAgentName("kafkaes");
+
+		List<FlumeSource> sourceList = new ArrayList<>();
+
+		FlumeSource fs = new FlumeSource();
+		fs.setSourceType(org.apache.flume.service.SourceType.KAFKA);
+		KafkaSource kafkaSource = new KafkaSource();
+		kafkaSource.setServers(
+				"10.35.66.127:9092,10.35.66.128:9092,10.35.66.129:9092,10.35.66.130:9092,10.35.66.131:9092,10.35.66.132:9092,10.35.66.133:9092,10.35.66.134:9092,10.35.66.135:9092,10.35.66.136:9092");
+		kafkaSource.setTopics("Kafka-savior");
+		kafkaSource.setGroup("myconsumer");
+
+		Interceptor i = new Interceptor();
+		i.setType("org.apache.flume.interceptor.SubInterceptor$Builder");
+
+		List<Interceptor> interceptorList = new ArrayList<>();
+		interceptorList.add(i);
+
+		fs.setInterceptorList(interceptorList);
+		fs.setKafkaSource(kafkaSource);
+		sourceList.add(fs);
+
+		List<FlumeSink> sinkList = new ArrayList<>();
+
+		FlumeSink flumeSink1 = new FlumeSink();
+		flumeSink1.setSinkType(org.apache.flume.service.SinkType.ES);
+		ESSink essink = new ESSink();
+		essink.setClusterName("elasticsearch");
+		essink.setHostNames("10.91.66.14:9301");
+		essink.setIndexName("logs");
+		essink.setIndexType("blog");
+		essink.setContentType("json");
+		flumeSink1.setEsSink(essink);
+		sinkList.add(flumeSink1);
+
+		fa.setSourceList(sourceList);
+		fa.setSinkList(sinkList);
+
+		return fa;
+	}
+
 	private FlumeAgent getKafka2esAgent() {
 		FlumeAgent fa = new FlumeAgent();
 		fa.setAgentName("kafka2es");
-//		fa.setSourceType(org.apache.flume.service.SourceType.KAFKA);
-//		fa.setSinkType(org.apache.flume.service.SinkType.ES);
 
-		// KafkaSource kafkaSource = new KafkaSource();
-		// kafkaSource.setServers("localhost:9092");
-		// kafkaSource.setTopics("test1, test2");
-		// kafkaSource.setGroup("custom.g.id");
-		// kafkaSource.setTopicsRegex("^topic[0-9]$");
-		// kafkaSource.setBatchSize("1000");
-		// fa.setKafkaSource(kafkaSource);
-		//
-		// HDFSSink hs = new HDFSSink();
-		// hs.setPath("hdfs://localhost:8020");
-		// hs.setFilePrefix("events-");
-		// fa.setHdfsSink(hs);
+		List<FlumeSource> sourceList = new ArrayList<>();
+
+		FlumeSource fs = new FlumeSource();
+		fs.setSourceType(org.apache.flume.service.SourceType.KAFKA);
+		KafkaSource kafkaSource = new KafkaSource();
+		kafkaSource.setServers("localhost:9092");
+		kafkaSource.setTopics("test1, test2");
+		kafkaSource.setGroup("custom.g.id");
+
+		Interceptor i = new Interceptor();
+		i.setType("org.apache.flume.interceptor.HostInterceptor$Builder");
+		Map params = new HashMap<>();
+		params.put("preserveExisting", "false");
+		params.put("hostHeader", "hostname");
+		i.setParams(params);
+
+		Interceptor i1 = new Interceptor();
+		i1.setType("org.apache.flume.interceptor.TimestampInterceptor$Builder");
+
+		List<Interceptor> interceptorList = new ArrayList<>();
+		interceptorList.add(i);
+		interceptorList.add(i1);
+
+		fs.setInterceptorList(interceptorList);
+		fs.setKafkaSource(kafkaSource);
+		sourceList.add(fs);
+
+		FlumeSource fs1 = new FlumeSource();
+		fs1.setSourceType(org.apache.flume.service.SourceType.KAFKA);
+		KafkaSource kafkaSource1 = new KafkaSource();
+		kafkaSource1.setServers("localhost:9093");
+		kafkaSource1.setTopics("test3, test4");
+		kafkaSource1.setGroup("custom");
+		fs1.setKafkaSource(kafkaSource1);
+		sourceList.add(fs1);
+
+		List<FlumeSink> sinkList = new ArrayList<>();
+		FlumeSink flumeSink = new FlumeSink();
+		flumeSink.setSinkType(org.apache.flume.service.SinkType.HDFS);
+		HDFSSink hs = new HDFSSink();
+		hs.setPath("hdfs://localhost:8020");
+		hs.setFilePrefix("events-");
+		flumeSink.setHdfsSink(hs);
+		sinkList.add(flumeSink);
+
+		FlumeSink flumeSink1 = new FlumeSink();
+		flumeSink1.setSinkType(org.apache.flume.service.SinkType.ES);
+		ESSink essink = new ESSink();
+		essink.setClusterName("elastic");
+		essink.setHostNames("localhost:9200");
+		essink.setIndexName("indexname");
+		flumeSink1.setEsSink(essink);
+		sinkList.add(flumeSink1);
+
+		FlumeSink flumeSink2 = new FlumeSink();
+		flumeSink2.setSinkType(org.apache.flume.service.SinkType.KAFKA);
+		KafkaSink ks = new KafkaSink();
+		ks.setTopic("my topic");
+		ks.setServers("localhost");
+		flumeSink2.setKafkaSink(ks);
+		sinkList.add(flumeSink2);
+
+		fa.setSourceList(sourceList);
+		fa.setSinkList(sinkList);
 
 		return fa;
 	}
@@ -137,7 +242,7 @@ public class TestThriftClient {
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FlumeControllerService.Client client = new FlumeControllerService.Client(protocol);
 			transport.open();
-			ResponseState result = client.stopFlumeAgent("kafka2es");
+			ResponseState result = client.stopFlumeAgent("kafkaes");
 			System.out.println("thrift remote call : " + result);
 		} catch (TTransportException e) {
 			e.printStackTrace();
