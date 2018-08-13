@@ -28,6 +28,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ import org.apache.flume.service.HDFSSink;
 import org.apache.flume.service.Interceptor;
 import org.apache.flume.service.KafkaSink;
 import org.apache.flume.service.KafkaSource;
+import org.apache.flume.util.ZooKeeperSingleton;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -240,4 +242,16 @@ public class TestZK {
 		System.out.println(new String(zk.getData("/flume/a2", true, null)));
 	}
 
+	@Test
+	public void testGetChild() throws KeeperException, InterruptedException {
+		ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
+		String path = "/flume/activelist/";
+		if (path.endsWith("/")) {
+			path = path.substring(0, path.length() - 1);
+		}
+		List<String> list = zk.getChildren(path, false);
+		for (String string : list) {
+			System.out.println(string);
+		}
+	}
 }
