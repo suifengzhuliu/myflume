@@ -48,12 +48,10 @@ public class ElasticSearchClientFactory {
 
 		if (clientType.equalsIgnoreCase(TransportClient) && serializer != null) {
 			return new ElasticSearchTransportClient(hostNames, clusterName, serializer);
-		} 
-//		else if (clientType.equalsIgnoreCase(TransportClient) && serializer != null) {
-//			return new ElasticSearchTransportClient(hostNames, clusterName, serializer);
-//		} else if (clientType.equalsIgnoreCase(TransportClient) && indexBuilder != null) {
-//			return new ElasticSearchTransportClient(hostNames, clusterName, indexBuilder);
-//		} else if (clientType.equalsIgnoreCase(RestClient) && serializer != null) {
+		} else if (clientType.equalsIgnoreCase(TransportClient) && indexBuilder != null) {
+			return new ElasticSearchTransportClient(hostNames, clusterName, indexBuilder);
+		}
+//		else if (clientType.equalsIgnoreCase(RestClient) && serializer != null) {
 //			return new ElasticSearchRestClient(hostNames, serializer);
 //		}
 		throw new NoSuchClientTypeException();

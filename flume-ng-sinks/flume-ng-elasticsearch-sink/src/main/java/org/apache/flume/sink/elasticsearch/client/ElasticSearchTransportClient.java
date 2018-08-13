@@ -19,17 +19,16 @@
 package org.apache.flume.sink.elasticsearch.client;
 
 import static org.apache.flume.sink.elasticsearch.ElasticSearchSinkConstants.DEFAULT_PORT;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Set;
 
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.EventDeliveryException;
 import org.apache.flume.sink.elasticsearch.ElasticSearchEventSerializer;
+import org.apache.flume.sink.elasticsearch.ElasticSearchIndexRequestBuilderFactory;
 import org.apache.flume.sink.elasticsearch.IndexNameBuilder;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -37,14 +36,11 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.annotations.VisibleForTesting;
 
 public class ElasticSearchTransportClient implements ElasticSearchClient {
@@ -53,16 +49,25 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 	private TransportAddress[] serverAddresses;
 	private ElasticSearchEventSerializer serializer;
 	private BulkRequestBuilder bulkRequestBuilder;
+	private ElasticSearchIndexRequestBuilderFactory indexRequestBuilderFactory;
 
 	@VisibleForTesting
 	void setBulkRequestBuilder(BulkRequestBuilder bulkRequestBuilder) {
 		this.bulkRequestBuilder = bulkRequestBuilder;
 	}
 
-	public ElasticSearchTransportClient(String[] hostNames, String clusterName, ElasticSearchEventSerializer serializer) {
+	public ElasticSearchTransportClient(String[] hostNames, String clusterName,
+			ElasticSearchEventSerializer serializer) {
 		configureHostnames(hostNames);
 		this.serializer = serializer;
 		openClient(clusterName);
+	}
+
+	public ElasticSearchTransportClient(String[] hostNames, String clusterName,
+			ElasticSearchIndexRequestBuilderFactory indexBuilder) {
+	    configureHostnames(hostNames);
+	    this.indexRequestBuilderFactory = indexBuilder;
+	    openClient(clusterName);
 	}
 
 	private void openClient(String clusterName) {
@@ -111,7 +116,8 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 	}
 
 	@Override
-	public void addEvent(Event event, IndexNameBuilder indexNameBuilder, String indexType, long ttlMs) throws Exception {
+	public void addEvent(Event event, IndexNameBuilder indexNameBuilder, String indexType, long ttlMs)
+			throws Exception {
 		if (bulkRequestBuilder == null) {
 			bulkRequestBuilder = client.prepareBulk();
 		}
@@ -131,6 +137,17 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 		String indexName = indexNameBuilder.getIndexName(event);
 		// logger.info("the indexname is {},the indextype is {}", indexName,
 		// indexType);
+
+		if (indexRequestBuilderFactory == null) {
+			indexRequestBuilder = client.prepareIndex(indexNameBuilder.getIndexName(event), indexType)
+					.setSource(serializer.getContentBuilder(event));
+//			indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(), XContentType.JSON);
+			
+		} else {
+			indexRequestBuilder = indexRequestBuilderFactory.createIndexRequest(client,
+					indexNameBuilder.getIndexPrefix(event), indexType, event);
+		}
+
 		indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(), XContentType.JSON);
 		bulkRequestBuilder.add(indexRequestBuilder);
 	}
