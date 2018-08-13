@@ -32,22 +32,19 @@ public class ElasticSearchClientFactory {
 
 	/**
 	 *
-	 * @param clientType
-	 *            String representation of client type
-	 * @param hostNames
-	 *            Array of strings that represents hostnames with ports
-	 *            (hostname:port)
-	 * @param clusterName
-	 *            Elasticsearch cluster name used only by Transport Client
-	 * @param serializer
-	 *            Serializer of flume events to elasticsearch documents
+	 * @param clientType  String representation of client type
+	 * @param hostNames   Array of strings that represents hostnames with ports
+	 *                    (hostname:port)
+	 * @param clusterName Elasticsearch cluster name used only by Transport Client
+	 * @param serializer  Serializer of flume events to elasticsearch documents
 	 * @return
 	 */
-	public ElasticSearchClient getClient(String clientType, String[] hostNames, String clusterName, ElasticSearchEventSerializer serializer,
-			ElasticSearchIndexRequestBuilderFactory indexBuilder) throws NoSuchClientTypeException {
+	public ElasticSearchClient getClient(String contentType, String clientType, String[] hostNames, String clusterName,
+			ElasticSearchEventSerializer serializer, ElasticSearchIndexRequestBuilderFactory indexBuilder)
+			throws NoSuchClientTypeException {
 
 		if (clientType.equalsIgnoreCase(TransportClient) && serializer != null) {
-			return new ElasticSearchTransportClient(hostNames, clusterName, serializer);
+			return new ElasticSearchTransportClient(contentType, hostNames, clusterName, serializer);
 		} else if (clientType.equalsIgnoreCase(TransportClient) && indexBuilder != null) {
 			return new ElasticSearchTransportClient(hostNames, clusterName, indexBuilder);
 		}
@@ -60,17 +57,14 @@ public class ElasticSearchClientFactory {
 	/**
 	 * Used for tests only. Creates local elasticsearch instance client.
 	 *
-	 * @param clientType
-	 *            Name of client to use
-	 * @param serializer
-	 *            Serializer for the event
-	 * @param indexBuilder
-	 *            Index builder factory
+	 * @param clientType   Name of client to use
+	 * @param serializer   Serializer for the event
+	 * @param indexBuilder Index builder factory
 	 *
 	 * @return Local elastic search instance client
 	 */
-	public ElasticSearchClient getLocalClient(String clientType, ElasticSearchEventSerializer serializer, ElasticSearchIndexRequestBuilderFactory indexBuilder)
-			throws NoSuchClientTypeException {
+	public ElasticSearchClient getLocalClient(String clientType, ElasticSearchEventSerializer serializer,
+			ElasticSearchIndexRequestBuilderFactory indexBuilder) throws NoSuchClientTypeException {
 //		if (clientType.equalsIgnoreCase(TransportClient) && serializer != null) {
 //			return new ElasticSearchTransportClient(serializer);
 //		} else if (clientType.equalsIgnoreCase(TransportClient) && indexBuilder != null) {

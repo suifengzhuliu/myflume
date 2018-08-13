@@ -24,11 +24,9 @@ import java.io.File;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.flume.ha.ActiveStandbyElector;
 import org.apache.flume.ha.ActiveStandbyElector.ActiveStandbyElectorCallback;
 import org.apache.flume.lifecycle.LifecycleAware;
 import org.apache.flume.node.Application;
@@ -38,7 +36,6 @@ import org.apache.flume.util.AddressUtils;
 import org.apache.flume.util.PropertiesUtil;
 import org.apache.flume.util.ZooKeeperSingleton;
 import org.apache.thrift.TException;
-import org.apache.velocity.runtime.directive.Foreach;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
@@ -66,35 +63,23 @@ public class FlumeControllerServiceImpl implements Iface {
 		res.setStatus(Status.OK);
 		res.setMsg("success");
 		try {
-
-			checkServiceState(agent.getSourceList());
-
 			String agentName = agent.getAgentName();
+			checkServiceState(agent.getSourceList());
+			boolean startState = checkHasStarted(agentName);
+			if (startState) {
+				res.setStatus(Status.FAILED);
+				res.setMsg("the agent has started");
+				return res;
+			}
 			MDC.put(MDC_AGENTNAME, agentName);
 
-			String zkAgentPath = getAgentBasePath();
-
 			saveOrUpdateConf(agent);
-			add2zk(agentName);
+
 //			ActiveStandbyElector elector = new ActiveStandbyElector("localhost:2181", 5 * 1000, "/flume_test/a",
 //					new ElectorCallbacks(), 3, true, agentName);
 
-			Application application = null;
-
-			EventBus eventBus = new EventBus(agentName + "-event-bus");
-			List<LifecycleAware> components = Lists.newArrayList();
-			String zkAddress = PropertiesUtil.readValue("zkAddress");
-			PollingZooKeeperConfigurationProvider zookeeperConfigurationProvider = new PollingZooKeeperConfigurationProvider(
-					agentName, zkAddress, zkAgentPath, eventBus);
-			components.add(zookeeperConfigurationProvider);
-			application = new Application(components);
-			eventBus.register(application);
-
-			application.start();
-
-		
-			map.put(agentName, application);
-
+			startAgent(agentName);
+			add2zk(agentName);
 		} catch (Exception e) {
 			res.setMsg(e.getMessage());
 			res.setStatus(Status.FAILED);
@@ -106,6 +91,18 @@ public class FlumeControllerServiceImpl implements Iface {
 		return res;
 	}
 
+	private boolean checkHasStarted(String agentName) {
+		if (map.get(agentName) != null) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 所有的source必须状态一致，即要不都是有状态服务，或者全部是无状态服务
+	 * 
+	 * @param sourceList
+	 */
 	private void checkServiceState(List<FlumeSource> sourceList) {
 		for (FlumeSource flumeSource : sourceList) {
 
@@ -276,5 +273,40 @@ public class FlumeControllerServiceImpl implements Iface {
 
 		}
 
+	}
+
+	private void startAgent(String agentName) throws Exception {
+		try {
+			Application application = null;
+			EventBus eventBus = new EventBus(agentName + "-event-bus");
+			List<LifecycleAware> components = Lists.newArrayList();
+			String zkAddress = PropertiesUtil.readValue("zkAddress");
+			PollingZooKeeperConfigurationProvider zookeeperConfigurationProvider = new PollingZooKeeperConfigurationProvider(
+					agentName, zkAddress, getAgentBasePath(), eventBus);
+			components.add(zookeeperConfigurationProvider);
+			application = new Application(components);
+			eventBus.register(application);
+
+			application.start();
+			map.put(agentName, application);
+		} catch (Exception e) {
+			logger.error("startAgent error,the msg is {}", e);
+		}
+	}
+
+	protected void loadStartedAgent() {
+		String activeAgentPath = PropertiesUtil.readValue("zk.agent.activelist");
+		ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
+		try {
+			if (activeAgentPath != null && activeAgentPath.length() > 1 && activeAgentPath.endsWith("/")) {
+				activeAgentPath = activeAgentPath.substring(0, activeAgentPath.length() - 1);
+			}
+			List<String> list = zk.getChildren(activeAgentPath, false);
+			for (String agentName : list) {
+				startAgent(agentName);
+			}
+		} catch (Exception e) {
+			logger.error("loadStartedAgent error,the msg is {}", e);
+		}
 	}
 }

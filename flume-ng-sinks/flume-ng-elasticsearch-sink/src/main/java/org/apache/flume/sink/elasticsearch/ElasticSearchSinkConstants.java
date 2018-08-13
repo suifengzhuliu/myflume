@@ -93,6 +93,13 @@ public class ElasticSearchSinkConstants {
    */
   public static final String CLIENT_PREFIX = CLIENT_TYPE + ".";
 
+  
+  /**
+   * The client type used for sending bulks to ElasticSearch
+   */
+  public static final String CONTENT_TYPE = "contentType";
+  
+  
   /**
    * DEFAULTS USED BY THE SINK
    */

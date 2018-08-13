@@ -38,7 +38,10 @@ public class App {
 		if (null == port || port.length() == 0) {
 			port = DEFAULT_SERVER_PORT;
 		}
-		FlumeControllerService.Processor tprocessor = new FlumeControllerService.Processor(new FlumeControllerServiceImpl());
+
+		FlumeControllerServiceImpl service = new FlumeControllerServiceImpl();
+
+		FlumeControllerService.Processor tprocessor = new FlumeControllerService.Processor(service);
 		TServerSocket serverTransport;
 		try {
 
@@ -48,6 +51,10 @@ public class App {
 			tArgs.protocolFactory(new TBinaryProtocol.Factory());
 			TServer server = new TSimpleServer(tArgs);
 			server.serve();
+
+			
+			service.loadStartedAgent();
+			
 		} catch (TTransportException e) {
 			logger.error("start thrift service error,the msg is ", e);
 		}

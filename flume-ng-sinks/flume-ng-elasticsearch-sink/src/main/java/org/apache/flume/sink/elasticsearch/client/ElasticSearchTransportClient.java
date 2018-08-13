@@ -45,6 +45,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class ElasticSearchTransportClient implements ElasticSearchClient {
 	public static final Logger logger = LoggerFactory.getLogger(ElasticSearchTransportClient.class);
+	private String contentType;
 	private TransportClient client;
 	private TransportAddress[] serverAddresses;
 	private ElasticSearchEventSerializer serializer;
@@ -56,8 +57,9 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 		this.bulkRequestBuilder = bulkRequestBuilder;
 	}
 
-	public ElasticSearchTransportClient(String[] hostNames, String clusterName,
+	public ElasticSearchTransportClient(String contentType, String[] hostNames, String clusterName,
 			ElasticSearchEventSerializer serializer) {
+		this.contentType = contentType;
 		configureHostnames(hostNames);
 		this.serializer = serializer;
 		openClient(clusterName);
@@ -65,9 +67,9 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 
 	public ElasticSearchTransportClient(String[] hostNames, String clusterName,
 			ElasticSearchIndexRequestBuilderFactory indexBuilder) {
-	    configureHostnames(hostNames);
-	    this.indexRequestBuilderFactory = indexBuilder;
-	    openClient(clusterName);
+		configureHostnames(hostNames);
+		this.indexRequestBuilderFactory = indexBuilder;
+		openClient(clusterName);
 	}
 
 	private void openClient(String clusterName) {
@@ -135,20 +137,29 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 		// XContentBuilder build = serializer.getContentBuilder(event);
 
 		String indexName = indexNameBuilder.getIndexName(event);
-		// logger.info("the indexname is {},the indextype is {}", indexName,
-		// indexType);
 
-		if (indexRequestBuilderFactory == null) {
+		if (contentType != null) {
+			if (contentType.equals(XContentType.JSON.shortName())) {
+				indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(),
+						XContentType.JSON);
+			} else if (contentType.equals(XContentType.SMILE.shortName())) {
+				indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(),
+						XContentType.SMILE);
+			} else if (contentType.equals(XContentType.CBOR.shortName())) {
+				indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(),
+						XContentType.CBOR);
+			} else if (contentType.equals(XContentType.YAML.shortName())) {
+				indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(),
+						XContentType.YAML);
+			}
+		} else if (indexRequestBuilderFactory == null) {
 			indexRequestBuilder = client.prepareIndex(indexNameBuilder.getIndexName(event), indexType)
 					.setSource(serializer.getContentBuilder(event));
-//			indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(), XContentType.JSON);
-			
 		} else {
 			indexRequestBuilder = indexRequestBuilderFactory.createIndexRequest(client,
 					indexNameBuilder.getIndexPrefix(event), indexType, event);
 		}
 
-		indexRequestBuilder = client.prepareIndex(indexName, indexType).setSource(event.getBody(), XContentType.JSON);
 		bulkRequestBuilder.add(indexRequestBuilder);
 	}
 
