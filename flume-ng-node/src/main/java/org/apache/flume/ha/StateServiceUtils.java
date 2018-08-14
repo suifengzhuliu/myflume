@@ -22,10 +22,10 @@ import org.apache.flume.service.SourceType;
 
 public class StateServiceUtils {
 	public static Constants getState(SourceType type) {
-		if (type.equals(SourceType.KAFKA) || type.equals(SourceType.HTTP)) {
+		if (type.equals(SourceType.KAFKA)) {
 			return Constants.NO_STATE;
 		}
-		if (type.equals(SourceType.DB)) {
+		if (type.equals(SourceType.HTTP)) {
 			return Constants.HAS_STATE;
 		}
 
