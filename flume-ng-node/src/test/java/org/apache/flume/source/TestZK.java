@@ -254,4 +254,11 @@ public class TestZK {
 			System.out.println(string);
 		}
 	}
+	
+	@Test
+	public void test1() {
+		int a = 1^0;
+		System.out.println();
+	}
+	
 }

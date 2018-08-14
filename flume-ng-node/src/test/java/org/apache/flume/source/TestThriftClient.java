@@ -29,6 +29,7 @@ import org.apache.flume.service.FlumeControllerService;
 import org.apache.flume.service.FlumeSink;
 import org.apache.flume.service.FlumeSource;
 import org.apache.flume.service.HDFSSink;
+import org.apache.flume.service.HttpSource;
 import org.apache.flume.service.Interceptor;
 import org.apache.flume.service.KafkaSink;
 import org.apache.flume.service.KafkaSource;
@@ -77,7 +78,7 @@ public class TestThriftClient {
 	public void testStart() {
 		TTransport transport = null;
 
-		FlumeAgent fa = getTest1Agent();
+		FlumeAgent fa = getTest2Agent();
 
 		try {
 			transport = new TSocket(SERVER_IP, SERVER_PORT, TIMEOUT);
@@ -95,6 +96,38 @@ public class TestThriftClient {
 				transport.close();
 			}
 		}
+	}
+
+	private FlumeAgent getTest2Agent() {
+		FlumeAgent fa = new FlumeAgent();
+		fa.setAgentName("mytestagent");
+
+		List<FlumeSource> sourceList = new ArrayList<>();
+
+		FlumeSource fs = new FlumeSource();
+		fs.setSourceType(org.apache.flume.service.SourceType.HTTP);
+		HttpSource httpSource = new HttpSource();
+		httpSource.setPort("1000");
+		fs.setHttpSource(httpSource);
+		sourceList.add(fs);
+
+		List<FlumeSink> sinkList = new ArrayList<>();
+
+		FlumeSink flumeSink1 = new FlumeSink();
+		flumeSink1.setSinkType(org.apache.flume.service.SinkType.ES);
+		ESSink essink = new ESSink();
+		essink.setClusterName("elasticsearch");
+		essink.setHostNames("10.91.66.14:9301");
+		essink.setIndexName("logs");
+		essink.setIndexType("blog");
+		essink.setContentType("json");
+		flumeSink1.setEsSink(essink);
+		sinkList.add(flumeSink1);
+
+		fa.setSourceList(sourceList);
+		fa.setSinkList(sinkList);
+
+		return fa;
 	}
 
 	private FlumeAgent getTest1Agent() {
