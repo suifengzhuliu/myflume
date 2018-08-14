@@ -356,7 +356,7 @@ public class FlumeControllerServiceImpl implements Iface {
 		}
 	}
 
-	protected void loadStartedAgent() {
+	public void loadStartedAgent() {
 		String activeAgentPath = PropertiesUtil.readValue("zk.agent.activelist");
 		ZooKeeper zk = ZooKeeperSingleton.getInstance().getZk();
 		try {
