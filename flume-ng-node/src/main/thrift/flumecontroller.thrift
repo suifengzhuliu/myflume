@@ -135,5 +135,6 @@ service   FlumeControllerService {
   ResponseState stopFlumeAgent(1:string agentName)
   //Override if exist
   ResponseState saveOrUpdateConf(1:FlumeAgent agent)
+  ResponseState deleteFlumeAgent(1:string agentName)
 }
 
