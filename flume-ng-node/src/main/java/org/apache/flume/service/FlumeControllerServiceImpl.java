@@ -434,3 +434,5 @@ public class FlumeControllerServiceImpl implements Iface {
 		return code == Code.CONNECTIONLOSS || code == Code.OPERATIONTIMEOUT;
 	}
 }
+
+
